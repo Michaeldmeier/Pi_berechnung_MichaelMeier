@@ -29,7 +29,7 @@
 #include "NHD0420Driver.h"
 #include "avr_f64.h"	
 char Pistring[20];
-float *pivar;	
+
 
 extern void vApplicationIdleHook( void );
 void vDisplayTask(void *pvParameters);
@@ -50,7 +50,7 @@ int main(void)
 	vInitClock();
 	vInitDisplay();
 	
-	xTaskCreate( vDisplayTask, (const char *) "Display", configMINIMAL_STACK_SIZE+10, NULL, 2, &PiTask);
+	xTaskCreate( vDisplayTask, (const char *) "Display", configMINIMAL_STACK_SIZE+300, NULL, 2, &PiTask);
 //	xTaskCreate( vButtonTask, (const char *) "Button", configMINIMAL_STACK_SIZE+10, NULL, 1, &PiTask);
 	xTaskCreate( vCalcPiTask, (const char *) "CalcPi", configMINIMAL_STACK_SIZE+300, NULL, 1, &PiTask);
 
@@ -65,8 +65,7 @@ void vDisplayTask(void *pvParameters) {
 	PORTE.OUT = 0x01;
 	for(;;) {
 		PORTE.OUTTGL = 0x01;
-		char* tempResultString = f_to_string(0.5, 16, 16);		//Verwandeln einer Double-Variable in einen String
-		sprintf(Pistring, "1: %s", tempResultString);				//Einsetzen des Strings in einen anderen String
+		
 		vDisplayClear();										//Löschen des ganzen Displays
 		vDisplayWriteStringAtPos(0,0,"Pi Ausgabe");				//Ausgabe auf das Display
 		vDisplayWriteStringAtPos(1,0,"%s", Pistring);
@@ -117,7 +116,8 @@ void vCalcPiTask(void *pvParameters) {
 				m++;
 			}
 			//pivar=f_mult(pi4var,f_sd(4));
-		
+		char* tempResultString = f_to_string(pii, 16, 16);		//Verwandeln einer Double-Variable in einen String
+		sprintf(Pistring, "1: %s", tempResultString);				//Einsetzen des Strings in einen anderen String
 	
 	}
 }
