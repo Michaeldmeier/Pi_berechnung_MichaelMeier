@@ -42,6 +42,7 @@ SUBDIRS :=  \
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
 ../avr_f64.c \
+../ButtonHandler.c \
 ../driver/clksys_driver.c \
 ../driver/pmic_driver.c \
 ../driver/port_driver.c \
@@ -71,6 +72,7 @@ ASM_SRCS +=
 
 OBJS +=  \
 avr_f64.o \
+ButtonHandler.o \
 driver/clksys_driver.o \
 driver/pmic_driver.o \
 driver/port_driver.o \
@@ -93,6 +95,7 @@ utils.o
 
 OBJS_AS_ARGS +=  \
 avr_f64.o \
+ButtonHandler.o \
 driver/clksys_driver.o \
 driver/pmic_driver.o \
 driver/port_driver.o \
@@ -115,6 +118,7 @@ utils.o
 
 C_DEPS +=  \
 avr_f64.d \
+ButtonHandler.d \
 driver/clksys_driver.d \
 driver/pmic_driver.d \
 driver/port_driver.d \
@@ -137,6 +141,7 @@ utils.d
 
 C_DEPS_AS_ARGS +=  \
 avr_f64.d \
+ButtonHandler.d \
 driver/clksys_driver.d \
 driver/pmic_driver.d \
 driver/port_driver.d \
@@ -171,6 +176,8 @@ LINKER_SCRIPT_DEP+=
 
 
 # AVR32/GNU C Compiler
+
+
 
 
 

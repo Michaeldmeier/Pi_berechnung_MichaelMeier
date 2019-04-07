@@ -4,6 +4,8 @@
 
 avr_f64.c
 
+ButtonHandler.c
+
 driver\clksys_driver.c
 
 driver\pmic_driver.c

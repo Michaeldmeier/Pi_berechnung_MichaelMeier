@@ -28,15 +28,21 @@
 #include "errorHandler.h"
 #include "NHD0420Driver.h"
 #include "avr_f64.h"	
+#include "buttonhandler.h"
 char Pistring[20];
+float64_t pii=0;
+#define BIT_0	( 1 << 0 )
+#define BIT_1	( 1 << 1 )
+#define BIT_2	( 1 << 2 )
 
 
 extern void vApplicationIdleHook( void );
 void vDisplayTask(void *pvParameters);
-//void vButtonTask(void *pvParameters);
+void vButtonTask(void *pvParameters);
 void vCalcPiTask(void *pvParameters);
 
 TaskHandle_t PiTask;
+EventGroupHandle_t piieventgroup;
 
 void vApplicationIdleHook( void )
 {	
@@ -46,12 +52,15 @@ void vApplicationIdleHook( void )
 int main(void)
 {
     resetReason_t reason = getResetReason();
-
+	piieventgroup = xEventGroupCreate();
 	vInitClock();
 	vInitDisplay();
+	initButtons();
+	
+	
 	
 	xTaskCreate( vDisplayTask, (const char *) "Display", configMINIMAL_STACK_SIZE+300, NULL, 2, &PiTask);
-//	xTaskCreate( vButtonTask, (const char *) "Button", configMINIMAL_STACK_SIZE+10, NULL, 1, &PiTask);
+	xTaskCreate( vButtonTask, (const char *) "Button", configMINIMAL_STACK_SIZE+300, NULL, 2, &PiTask);
 	xTaskCreate( vCalcPiTask, (const char *) "CalcPi", configMINIMAL_STACK_SIZE+300, NULL, 1, &PiTask);
 
 	vDisplayClear();
@@ -61,39 +70,57 @@ int main(void)
 
 void vDisplayTask(void *pvParameters) {
 	(void) pvParameters;
-	PORTE.DIRSET = PIN0_bm; /*LED1*/
-	PORTE.OUT = 0x01;
 	for(;;) {
-		PORTE.OUTTGL = 0x01;
-		
+		char* tempResultString = f_to_string(pii, 16, 16);		//Verwandeln einer Double-Variable in einen String
+		sprintf(Pistring, "1: %s", tempResultString);			//Einsetzen des Strings in einen anderen String
 		vDisplayClear();										//Löschen des ganzen Displays
 		vDisplayWriteStringAtPos(0,0,"Pi Ausgabe");				//Ausgabe auf das Display
 		vDisplayWriteStringAtPos(1,0,"%s", Pistring);
+		if((xEventGroupGetBits(piieventgroup)&4)==4)
+		{
+			vDisplayWriteStringAtPos(2,0,"Running");
+		}
+		else
+		{
+			vDisplayWriteStringAtPos(2,0,"Stopped");
+		}
 		vTaskDelay(500 / portTICK_RATE_MS);
 	}
 }
-/*void vButtonTask(void *pvParameters) {
+void vButtonTask(void *pvParameters) {
 	(void) pvParameters;
-	PORTF.DIRSET = PIN0_bm; //LED1
-	PORTF.OUT = 0x01;
 	for(;;) {
-		PORTF.OUTTGL = 0x01;
-		vTaskDelay(100 / portTICK_RATE_MS);
+		updateButtons();
+		if(getButtonPress(BUTTON1)== SHORT_PRESSED)
+		{
+			xEventGroupSetBits(piieventgroup, BIT_0);
+		}
+		if(getButtonPress(BUTTON2)== SHORT_PRESSED)
+		{
+			xEventGroupClearBits(piieventgroup, BIT_0);
+		}
+		if(getButtonPress(BUTTON3)== SHORT_PRESSED)
+		{
+			xEventGroupSetBits(piieventgroup, BIT_1);
+		}
+		vTaskDelay(10 / portTICK_RATE_MS);
 	}
-}*/
+}
 void vCalcPiTask(void *pvParameters) {
-	(void) pvParameters;	
-								
-		uint64_t m=0;
-		float64_t n=0;
-		float64_t o=0;
-		float64_t p=0;
-		float64_t q=0;
-		float64_t r=0;
-		float64_t s=0;
-		float64_t t=0;
-		float64_t pii=0;
-		for(;;) 
+	(void) pvParameters;		
+	uint64_t m=0;
+	float64_t n=0;
+	float64_t o=0;
+	float64_t p=0;
+	float64_t q=0;
+	float64_t r=0;
+	float64_t s=0;
+	float64_t t=0;
+	PORTE.DIRSET = PIN0_bm; /*LED1*/
+	PORTE.OUT = 0x01;
+	for(;;) 
+	{
+		if((xEventGroupGetBits(piieventgroup)&1)==1)
 		{
 			if(m%2)
 			{
@@ -106,8 +133,6 @@ void vCalcPiTask(void *pvParameters) {
 			}
 			else
 			{
-				//h=(-4/(2*m+1));
-				//pivar=f_add(pivar,(float64_t)h);
 				r=f_mult(o,f_sd(2));
 				s=f_add(r,f_sd(1));
 				t=f_div(f_sd(4),s);
@@ -115,9 +140,24 @@ void vCalcPiTask(void *pvParameters) {
 				o=f_add(o, f_sd(1));
 				m++;
 			}
-			//pivar=f_mult(pi4var,f_sd(4));
-		char* tempResultString = f_to_string(pii, 16, 16);		//Verwandeln einer Double-Variable in einen String
-		sprintf(Pistring, "1: %s", tempResultString);				//Einsetzen des Strings in einen anderen String
-	
+			xEventGroupSetBits(piieventgroup, BIT_2);
+		}
+		else
+		{
+			xEventGroupClearBits(piieventgroup, BIT_2);
+		}
+		if((xEventGroupGetBits(piieventgroup)&2)==2)
+		{
+				m=0;
+				n=0;
+				o=0;
+				p=0;
+				q=0;
+				r=0;
+				s=0;
+				t=0;
+				pii=0;
+				xEventGroupClearBits(piieventgroup, BIT_1);
+		}
 	}
 }
