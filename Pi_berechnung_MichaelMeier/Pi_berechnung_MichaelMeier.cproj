@@ -285,6 +285,9 @@
     <Compile Include="includes\FreeRTOSConfig.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="includes\HW_interupt.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="includes\init.h">
       <SubType>compile</SubType>
     </Compile>
@@ -292,6 +295,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="includes\NHD0420Driver.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="includes\rtc.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="includes\utils.h">

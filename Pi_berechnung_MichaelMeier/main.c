@@ -7,7 +7,10 @@
 
 //#include <avr/io.h>
 #include <stdio.h>
-
+#include <avr/io.h>				//Headerfile für Ein- und Ausgänge
+#include <avr/interrupt.h>		//Headerfile für den Interupt
+#include "rtc.h"				//Headerfile für den Realtime Counter welcher ein Interupt auslöst
+//#include "HW_interupt.h"		//Headerfile für den Hardware Interupt
 #include "avr_compiler.h"
 #include "pmic_driver.h"
 #include "TC_driver.h"
@@ -30,7 +33,10 @@
 #include "avr_f64.h"	
 #include "buttonhandler.h"
 char Pistring[20];
+//long double pii=0;
 float64_t pii=0;
+int zeitlauft=0;
+int zeit=0;
 #define BIT_0	( 1 << 0 )
 #define BIT_1	( 1 << 1 )
 #define BIT_2	( 1 << 2 )
@@ -43,22 +49,27 @@ void vCalcPiTask(void *pvParameters);
 
 TaskHandle_t PiTask;
 EventGroupHandle_t piieventgroup;
-
+ISR(RTC_OVF_vect)				//Interupt welcher vom Realtime Counter ausgelöst wird
+{
+	if(zeitlauft)
+	{
+		zeit++;					//Zähler um 1 erhöhen
+	}
+}
 void vApplicationIdleHook( void )
 {	
-	
+
 }
 
 int main(void)
 {
+	rtc_init();					//Realtime Counter initialisieren
+//	HW_interupt();				//Hardware Interupt initialisieren
     resetReason_t reason = getResetReason();
 	piieventgroup = xEventGroupCreate();
 	vInitClock();
 	vInitDisplay();
 	initButtons();
-	
-	
-	
 	xTaskCreate( vDisplayTask, (const char *) "Display", configMINIMAL_STACK_SIZE+300, NULL, 2, &PiTask);
 	xTaskCreate( vButtonTask, (const char *) "Button", configMINIMAL_STACK_SIZE+300, NULL, 2, &PiTask);
 	xTaskCreate( vCalcPiTask, (const char *) "CalcPi", configMINIMAL_STACK_SIZE+300, NULL, 1, &PiTask);
@@ -70,7 +81,10 @@ int main(void)
 
 void vDisplayTask(void *pvParameters) {
 	(void) pvParameters;
+	float64_t piiout;
 	for(;;) {
+		//piiout=f_sd(pii);
+		//char* tempResultString = f_to_string(piiout, 16, 16);		//Verwandeln einer Double-Variable in einen String
 		char* tempResultString = f_to_string(pii, 16, 16);		//Verwandeln einer Double-Variable in einen String
 		sprintf(Pistring, "1: %s", tempResultString);			//Einsetzen des Strings in einen anderen String
 		vDisplayClear();										//Löschen des ganzen Displays
@@ -84,6 +98,7 @@ void vDisplayTask(void *pvParameters) {
 		{
 			vDisplayWriteStringAtPos(2,0,"Stopped");
 		}
+		vDisplayWriteStringAtPos(3,0,"Zeit:%d s", zeit);
 		vTaskDelay(500 / portTICK_RATE_MS);
 	}
 }
@@ -124,27 +139,31 @@ void vCalcPiTask(void *pvParameters) {
 		{
 			if(m%2)
 			{
+				//pii=pii-(4.0/(2.0*m+1.0));
 				n=f_mult(o,f_sd(2));
 				p=f_add(n,f_sd(1));
-				q=f_div(f_sd(4),p);
+				q=f_div(f_sd(4.0),p);
 				pii=f_sub(pii, q);
 				o=f_add(o, f_sd(1));
 				m++;
 			}
 			else
 			{
+				//pii=pii+(4.0/(2.0*m+1.0));
 				r=f_mult(o,f_sd(2));
 				s=f_add(r,f_sd(1));
-				t=f_div(f_sd(4),s);
+				t=f_div(f_sd(4.0),s);
 				pii=f_add(pii, t);
 				o=f_add(o, f_sd(1));
 				m++;
 			}
+			zeitlauft=1;
 			xEventGroupSetBits(piieventgroup, BIT_2);
 		}
 		else
 		{
 			xEventGroupClearBits(piieventgroup, BIT_2);
+			zeitlauft=0;
 		}
 		if((xEventGroupGetBits(piieventgroup)&2)==2)
 		{
@@ -157,6 +176,7 @@ void vCalcPiTask(void *pvParameters) {
 				s=0;
 				t=0;
 				pii=0;
+				zeit=0;
 				xEventGroupClearBits(piieventgroup, BIT_1);
 		}
 	}
