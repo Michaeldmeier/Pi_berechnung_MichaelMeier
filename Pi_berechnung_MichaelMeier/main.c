@@ -96,34 +96,9 @@ void vDisplayTask(void *pvParameters) {
 		hilf2=f_compare(float00001,f_sub(floatpii, pii));
 		hilf3=f_compare(f_sub(pii,floatpii),float0);
 		hilf4=f_compare(float00001,f_sub(pii,floatpii));
-		
-		if(hilf1>0){
-					vDisplayWriteStringAtPos(0,11,"1");	
-		}
-		if(hilf2>0){
-					vDisplayWriteStringAtPos(0,12,"2");	
-		}
-		if(hilf1>0&&hilf2>0){
-					vDisplayWriteStringAtPos(0,13,"3");
-		}
-		if(hilf3>0){
-					vDisplayWriteStringAtPos(0,14,"1");	
-		}
-		if(hilf4>0){
-					vDisplayWriteStringAtPos(0,15,"2");	
-		}
-		if(hilf3>0&&hilf4>0){
-			vDisplayWriteStringAtPos(0,16,"3");
-		}
 		if((hilf3>0&&hilf4>0)||(hilf1>0&&hilf2>0)){
-			vDisplayWriteStringAtPos(0,17,"9");
 			zeitlauft=0;
-		}
-	/*	if(f_compare(float00001,f_sub(pii, floatpii))&&f_compare(f_sub(pii, floatpii),float0))
-		{
-			vDisplayWriteStringAtPos(0,12,"hilf");	
-		}*/
-		
+		}		
 		char* tempResultString = f_to_string(pii, 16, 16);		//Verwandeln einer Double-Variable in einen String
 		sprintf(Pistring, "1: %s", tempResultString);			//Einsetzen des Strings in einen anderen String
 		vDisplayClear();										//Löschen des ganzen Displays
@@ -137,9 +112,6 @@ void vDisplayTask(void *pvParameters) {
 		{
 			vDisplayWriteStringAtPos(2,0,"Stopped");			//Status ausgeben
 		}
-		//if(counter>136122){											//Zeit anhalten wen genauigkeit erreicht wurde
-	//		zeitlauft=0;
-	//	}
 		vDisplayWriteStringAtPos(3,0,"Zeit:%ds", zeit);			//Zeit ausgeben
 		vTaskDelay(500 / portTICK_RATE_MS);
 	}
