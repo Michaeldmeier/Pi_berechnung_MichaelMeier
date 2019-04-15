@@ -100,7 +100,7 @@ void vDisplayTask(void *pvParameters) {
 			zeitlauft=0;
 		}		
 		char* tempResultString = f_to_string(pii, 16, 16);		//Verwandeln einer Double-Variable in einen String
-		sprintf(Pistring, "1: %s", tempResultString);			//Einsetzen des Strings in einen anderen String
+		sprintf(Pistring, "%s", tempResultString);				//Einsetzen des Strings in einen anderen String
 		vDisplayClear();										//Löschen des ganzen Displays
 		vDisplayWriteStringAtPos(0,0,"Pi Ausgabe");				//Ausgabe auf das Display Text
 		vDisplayWriteStringAtPos(1,0,"%s", Pistring);			//Ausgabe auf das Display pi
