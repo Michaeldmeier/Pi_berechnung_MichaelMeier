@@ -36,7 +36,7 @@ char Pistring[20];
 float64_t pii=0;
 int zeitlauft=0;
 int zeit=0;
-uint64_t m=0;
+uint64_t counter=0;
 #define BIT_0	( 1 << 0 )
 #define BIT_1	( 1 << 1 )
 #define BIT_2	( 1 << 2 )
@@ -84,24 +84,23 @@ void vDisplayTask(void *pvParameters) {
 	float64_t piiout=3.1415;
 
 	for(;;) {
-		f_compare(pii, piiout);
 		char* tempResultString = f_to_string(pii, 16, 16);		//Verwandeln einer Double-Variable in einen String
 		sprintf(Pistring, "1: %s", tempResultString);			//Einsetzen des Strings in einen anderen String
 		vDisplayClear();										//Löschen des ganzen Displays
-		vDisplayWriteStringAtPos(0,0,"Pi Ausgabe");				//Ausgabe auf das Display
-		vDisplayWriteStringAtPos(1,0,"%s", Pistring);
-		if((xEventGroupGetBits(piieventgroup)&4)==4)
+		vDisplayWriteStringAtPos(0,0,"Pi Ausgabe");				//Ausgabe auf das Display Text
+		vDisplayWriteStringAtPos(1,0,"%s", Pistring);			//Ausgabe auf das Display pi
+		if((xEventGroupGetBits(piieventgroup)&4)==4)			//Status EventBit abfragen
 		{
-			vDisplayWriteStringAtPos(2,0,"Running");
+			vDisplayWriteStringAtPos(2,0,"Running");			//Status ausgeben
 		}
 		else
 		{
-			vDisplayWriteStringAtPos(2,0,"Stopped");
+			vDisplayWriteStringAtPos(2,0,"Stopped");			//Status ausgeben
 		}
-		if(m>136122){
+		if(counter>136122){											//Zeit anhalten wen genauigkeit erreicht wurde
 			zeitlauft=0;
 		}
-		vDisplayWriteStringAtPos(3,0,"Zeit:%ds i=%d", zeit,m);
+		vDisplayWriteStringAtPos(3,0,"Zeit:%ds", zeit);			//Zeit ausgeben
 		vTaskDelay(500 / portTICK_RATE_MS);
 	}
 }
@@ -109,57 +108,55 @@ void vButtonTask(void *pvParameters) {
 	(void) pvParameters;
 	for(;;) {
 		updateButtons();
-		if(getButtonPress(BUTTON1)== SHORT_PRESSED)
+		if(getButtonPress(BUTTON1)== SHORT_PRESSED)				//Button 1 gedrückt
 		{
-			zeitlauft=1;
-			xEventGroupSetBits(piieventgroup, BIT_0);		
+			zeitlauft=1;										//Zeit starten
+			xEventGroupSetBits(piieventgroup, BIT_0);			//Status EventBit setzen
 		}
-		if(getButtonPress(BUTTON2)== SHORT_PRESSED)
+		if(getButtonPress(BUTTON2)== SHORT_PRESSED)				//Button 2 gedrückt
 		{
-			zeitlauft=0;
-			xEventGroupClearBits(piieventgroup, BIT_0);
+			zeitlauft=0;										//Zeit stoppen
+			xEventGroupClearBits(piieventgroup, BIT_0);			//Status EventBit löschen
 		}
-		if(getButtonPress(BUTTON3)== SHORT_PRESSED)
+		if(getButtonPress(BUTTON3)== SHORT_PRESSED)				//Button 3 gedrückt
 		{
-			xEventGroupSetBits(piieventgroup, BIT_1);
+			xEventGroupSetBits(piieventgroup, BIT_1);			//Reset EventBit setzen
 		}
 		vTaskDelay(10 / portTICK_RATE_MS);
 	}
 }
 void vCalcPiTask(void *pvParameters) {
 	(void) pvParameters;		
-	float64_t n=0;
-	float64_t o=0;
-	float64_t p=0;
-	float64_t q=0;
-	float64_t r=0;
-	float64_t s=0;
-	float64_t t=0;
+	float64_t Zwischenspeicher1=0;
+	float64_t Zwischenspeicher2=0;
+	float64_t Zwischenspeicher3=0;
+	float64_t Zwischenspeicher4=0;
+	float64_t Zwischenspeicher5=0;
+	float64_t Zwischenspeicher6=0;
+	float64_t Zwischenspeicher7=0;
 	PORTE.DIRSET = PIN0_bm; /*LED1*/
 	PORTE.OUT = 0x01;
 	for(;;) 
 	{
 		if((xEventGroupGetBits(piieventgroup)&1)==1)
 		{
-			if(m%2)
+			if(counter%2)
 			{
-				//pii=pii-(4.0/(2.0*m+1.0));
-				n=f_mult(o,f_sd(2));
-				p=f_add(n,f_sd(1));
-				q=f_div(f_sd(4.0),p);
-				pii=f_sub(pii, q);
-				o=f_add(o, f_sd(1));
-				m++;
+				Zwischenspeicher1=f_mult(Zwischenspeicher2,f_sd(2));
+				Zwischenspeicher3=f_add(Zwischenspeicher1,f_sd(1));
+				Zwischenspeicher4=f_div(f_sd(4.0),Zwischenspeicher3);
+				pii=f_sub(pii, Zwischenspeicher4);
+				Zwischenspeicher2=f_add(Zwischenspeicher2, f_sd(1));
+				counter++;
 			}
 			else
 			{
-				//pii=pii+(4.0/(2.0*m+1.0));
-				r=f_mult(o,f_sd(2));
-				s=f_add(r,f_sd(1));
-				t=f_div(f_sd(4.0),s);
-				pii=f_add(pii, t);
-				o=f_add(o, f_sd(1));
-				m++;
+				Zwischenspeicher5=f_mult(Zwischenspeicher2,f_sd(2));
+				Zwischenspeicher6=f_add(Zwischenspeicher5,f_sd(1));
+				Zwischenspeicher7=f_div(f_sd(4.0),Zwischenspeicher6);
+				pii=f_add(pii, Zwischenspeicher7);
+				Zwischenspeicher2=f_add(Zwischenspeicher2, f_sd(1));
+				counter++;
 			}
 			xEventGroupSetBits(piieventgroup, BIT_2);
 		}
@@ -170,14 +167,14 @@ void vCalcPiTask(void *pvParameters) {
 		}
 		if((xEventGroupGetBits(piieventgroup)&2)==2)
 		{
-				m=0;
-				n=0;
-				o=0;
-				p=0;
-				q=0;
-				r=0;
-				s=0;
-				t=0;
+				counter=0;
+				Zwischenspeicher1=0;
+				Zwischenspeicher2=0;
+				Zwischenspeicher3=0;
+				Zwischenspeicher4=0;
+				Zwischenspeicher5=0;
+				Zwischenspeicher6=0;
+				Zwischenspeicher7=0;
 				pii=0;
 				zeit=0;
 				xEventGroupClearBits(piieventgroup, BIT_1);

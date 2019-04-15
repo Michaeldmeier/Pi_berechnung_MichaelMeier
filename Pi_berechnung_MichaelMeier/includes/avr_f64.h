@@ -87,7 +87,7 @@
 
 //#define F_WITH_isnan
 //#define F_WITH_finite
-//#define F_WITH_compare
+#define F_WITH_compare
 
 //#define F_WITH_float64_to_long
 //#define F_WITH_long_to_float64
