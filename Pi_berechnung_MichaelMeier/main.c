@@ -29,14 +29,14 @@
 #include "init.h"
 #include "utils.h"
 #include "errorHandler.h"
-#include "NHD0420Driver.h"
-#include "avr_f64.h"	
+#include "NHD0420Driver.h"	
+#include "avr_f64.h"
 #include "buttonhandler.h"
 char Pistring[20];
-//long double pii=0;
 float64_t pii=0;
 int zeitlauft=0;
 int zeit=0;
+uint64_t m=0;
 #define BIT_0	( 1 << 0 )
 #define BIT_1	( 1 << 1 )
 #define BIT_2	( 1 << 2 )
@@ -81,10 +81,10 @@ int main(void)
 
 void vDisplayTask(void *pvParameters) {
 	(void) pvParameters;
-	float64_t piiout;
+	float64_t piiout=3.1415;
+
 	for(;;) {
-		//piiout=f_sd(pii);
-		//char* tempResultString = f_to_string(piiout, 16, 16);		//Verwandeln einer Double-Variable in einen String
+		f_compare(pii, piiout);
 		char* tempResultString = f_to_string(pii, 16, 16);		//Verwandeln einer Double-Variable in einen String
 		sprintf(Pistring, "1: %s", tempResultString);			//Einsetzen des Strings in einen anderen String
 		vDisplayClear();										//Löschen des ganzen Displays
@@ -98,7 +98,10 @@ void vDisplayTask(void *pvParameters) {
 		{
 			vDisplayWriteStringAtPos(2,0,"Stopped");
 		}
-		vDisplayWriteStringAtPos(3,0,"Zeit:%d s", zeit);
+		if(m>136122){
+			zeitlauft=0;
+		}
+		vDisplayWriteStringAtPos(3,0,"Zeit:%ds i=%d", zeit,m);
 		vTaskDelay(500 / portTICK_RATE_MS);
 	}
 }
@@ -108,10 +111,12 @@ void vButtonTask(void *pvParameters) {
 		updateButtons();
 		if(getButtonPress(BUTTON1)== SHORT_PRESSED)
 		{
-			xEventGroupSetBits(piieventgroup, BIT_0);
+			zeitlauft=1;
+			xEventGroupSetBits(piieventgroup, BIT_0);		
 		}
 		if(getButtonPress(BUTTON2)== SHORT_PRESSED)
 		{
+			zeitlauft=0;
 			xEventGroupClearBits(piieventgroup, BIT_0);
 		}
 		if(getButtonPress(BUTTON3)== SHORT_PRESSED)
@@ -123,7 +128,6 @@ void vButtonTask(void *pvParameters) {
 }
 void vCalcPiTask(void *pvParameters) {
 	(void) pvParameters;		
-	uint64_t m=0;
 	float64_t n=0;
 	float64_t o=0;
 	float64_t p=0;
@@ -157,13 +161,12 @@ void vCalcPiTask(void *pvParameters) {
 				o=f_add(o, f_sd(1));
 				m++;
 			}
-			zeitlauft=1;
 			xEventGroupSetBits(piieventgroup, BIT_2);
 		}
 		else
 		{
 			xEventGroupClearBits(piieventgroup, BIT_2);
-			zeitlauft=0;
+			
 		}
 		if((xEventGroupGetBits(piieventgroup)&2)==2)
 		{
